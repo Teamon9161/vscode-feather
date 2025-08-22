@@ -1,0 +1,133 @@
+const vscode = require('vscode');
+const path = require('path');
+const child_process = require('child_process');
+
+function activate(context) {
+  let disposable = vscode.commands.registerCommand('feather.openFeather', async function () {
+    const fileUris = await vscode.window.showOpenDialog({
+      canSelectMany: false,
+      filters: { 'Feather Files': ['feather'] }
+    });
+    if (!fileUris || fileUris.length === 0) {
+      return;
+    }
+    const filePath = fileUris[0].fsPath;
+    const panel = vscode.window.createWebviewPanel('featherViewer', 'Feather Viewer', vscode.ViewColumn.One, {
+      enableScripts: true
+    });
+
+    panel.webview.html = getWebviewContent();
+
+    panel.webview.onDidReceiveMessage(async message => {
+      if (message.type === 'load') {
+        const result = await runPython(context, filePath, message.page, message.pageSize, message.filter);
+        if (result.error) {
+          panel.webview.postMessage({ type: 'error', error: result.error });
+        } else {
+          panel.webview.postMessage({
+            type: 'data',
+            columns: result.columns,
+            rows: result.rows,
+            totalRows: result.totalRows,
+            page: message.page,
+            pageSize: message.pageSize
+          });
+        }
+      }
+    });
+  });
+
+  context.subscriptions.push(disposable);
+}
+exports.activate = activate;
+
+function deactivate() { }
+exports.deactivate = deactivate;
+
+function runPython(context, file, page, pageSize, filter) {
+  return new Promise(resolve => {
+    const config = vscode.workspace.getConfiguration('feather');
+    const pythonPath = config.get('pythonPath', 'python');
+    const script = context.asAbsolutePath(path.join('python', 'viewer.py'));
+    const args = [script, file, '--page', String(page), '--page_size', String(pageSize)];
+    if (filter) {
+      args.push('--filter', filter);
+    }
+    const py = child_process.spawn(pythonPath, args);
+    let out = '';
+    let err = '';
+    py.stdout.on('data', d => out += d);
+    py.stderr.on('data', d => err += d);
+    py.on('close', () => {
+      try {
+        resolve(JSON.parse(out));
+      } catch (e) {
+        resolve({ error: err || e.message });
+      }
+    });
+  });
+}
+
+function getWebviewContent() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<body>
+  <div>
+    <label>Page Size: <input id="pageSize" value="100" /></label>
+    <label>Page: <input id="pageNumber" value="1" /></label>
+    <button id="gotoBtn">Go</button>
+    <button id="prevBtn">Prev</button>
+    <button id="nextBtn">Next</button>
+    <input id="filterInput" placeholder='Filter (e.g., col("column") == 1)' />
+    <button id="filterBtn">Apply Filter</button>
+  </div>
+  <div id="status"></div>
+  <table id="data"></table>
+  <script>
+    const vscode = acquireVsCodeApi();
+    let currentPage = 0;
+    function request(page){
+      const pageSize = parseInt(document.getElementById('pageSize').value) || 100;
+      const filter = document.getElementById('filterInput').value;
+      vscode.postMessage({ type: 'load', page, pageSize, filter });
+    }
+    document.getElementById('nextBtn').addEventListener('click', () => request(currentPage + 1));
+    document.getElementById('prevBtn').addEventListener('click', () => request(Math.max(0, currentPage - 1)));
+    document.getElementById('gotoBtn').addEventListener('click', () => {
+      const p = parseInt(document.getElementById('pageNumber').value) - 1;
+      request(p);
+    });
+    document.getElementById('filterBtn').addEventListener('click', () => request(0));
+    window.addEventListener('message', event => {
+      const msg = event.data;
+      if (msg.type === 'data') {
+        currentPage = msg.page;
+        document.getElementById('pageNumber').value = msg.page + 1;
+        const table = document.getElementById('data');
+        table.innerHTML = '';
+        const header = document.createElement('tr');
+        for (const c of msg.columns) {
+          const th = document.createElement('th');
+          th.textContent = c;
+          header.appendChild(th);
+        }
+        table.appendChild(header);
+        for (const row of msg.rows) {
+          const tr = document.createElement('tr');
+          for (const c of msg.columns) {
+            const td = document.createElement('td');
+            td.textContent = row[c];
+            tr.appendChild(td);
+          }
+          table.appendChild(tr);
+        }
+        document.getElementById('status').textContent = `Showing ${msg.page * msg.pageSize + 1}-${msg.page * msg.pageSize + msg.rows.length} of ${msg.totalRows}`;
+      } else if (msg.type === 'error') {
+        document.getElementById('status').textContent = msg.error;
+      }
+    });
+    request(0);
+  </script>
+</body>
+</html>`;
+}
