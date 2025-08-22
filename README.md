@@ -1,5 +1,4 @@
 # Feather Viewer VS Code Extension
-
 View and explore `.feather` files directly inside VS Code using Python's [polars](https://www.pola.rs/) library and an interactive AG Grid-powered table.
 
 ## Features

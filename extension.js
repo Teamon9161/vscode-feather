@@ -149,13 +149,11 @@ function getWebviewContent() {
       defaultColDef: { resizable: true, sortable: true, filter: true }
     };
     new agGrid.Grid(gridDiv, gridOptions);
-
     function request(page){
       const pageSize = parseInt(document.getElementById('pageSize').value) || 100;
       const filter = document.getElementById('filterInput').value;
       vscode.postMessage({ type: 'load', page, pageSize, filter });
     }
-
     document.getElementById('nextBtn').addEventListener('click', () => request(currentPage + 1));
     document.getElementById('prevBtn').addEventListener('click', () => request(Math.max(0, currentPage - 1)));
     document.getElementById('gotoBtn').addEventListener('click', () => {
