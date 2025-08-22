@@ -3,8 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="{{csp}}" />
-  <link rel="stylesheet" href="{{agGridCssUri}}" />
-  <link rel="stylesheet" href="{{agThemeCssUri}}" />
   <script src="{{agGridUri}}"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
   <style>
@@ -48,20 +46,6 @@
     .bottom-controls {
       margin-top: 8px;
     }
-    #grid.ag-theme-alpine {
-      --ag-background-color: var(--vscode-editor-background);
-      --ag-header-background-color: var(--vscode-editor-background);
-      --ag-foreground-color: var(--vscode-editor-foreground);
-      --ag-header-foreground-color: var(--vscode-editor-foreground);
-    }
-    .ag-theme-alpine .ag-cell,
-    .ag-theme-alpine .ag-header-cell {
-      border-right: 1px solid var(--vscode-editor-foreground);
-    }
-    .ag-theme-alpine .ag-row,
-    .ag-theme-alpine .ag-header-row {
-      border-bottom: 1px solid var(--vscode-editor-foreground);
-    }
   </style>
 </head>
 <body>
@@ -70,7 +54,7 @@
     <button id="exprBtn">Run</button>
   </div>
   <div id="status"></div>
-  <div id="grid" class="ag-theme-alpine"></div>
+  <div id="grid"></div>
   <div class="bottom-controls">
     <label>Page Size: <input id="pageSize" value="100" /></label>
     <label>Page: <input id="pageNumber" value="1" /></label>
