@@ -2,7 +2,6 @@ const vscode = require('vscode');
 const path = require('path');
 const child_process = require('child_process');
 
-
 class FeatherViewerProvider {
   constructor(context) {
     this.context = context;
@@ -62,7 +61,6 @@ function activate(context) {
 exports.activate = activate;
 
 function deactivate() {}
-
 exports.deactivate = deactivate;
 
 function runPython(context, file, page, pageSize, filter) {
@@ -142,7 +140,7 @@ function getWebviewContent() {
           }
           table.appendChild(tr);
         }
-        document.getElementById('status').textContent = `Showing ${msg.page * msg.pageSize + 1}-${msg.page * msg.pageSize + msg.rows.length} of ${msg.totalRows}`;
+        document.getElementById('status').textContent = 'Showing ' + (msg.page * msg.pageSize + 1) + '-' + (msg.page * msg.pageSize + msg.rows.length) + ' of ' + msg.totalRows;
       } else if (msg.type === 'error') {
         document.getElementById('status').textContent = msg.error;
       }
