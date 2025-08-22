@@ -77,7 +77,7 @@ function openFilterMenu(params, button) {
   menuDiv
     .querySelector('[data-action="asc"]')
     .addEventListener('click', () => {
-      params.api.applyColumnState({
+      params.columnApi.applyColumnState({
         state: [{ colId: params.column.getId(), sort: 'asc' }]
       });
       updateExprAndRequest(params.api);
@@ -86,7 +86,7 @@ function openFilterMenu(params, button) {
   menuDiv
     .querySelector('[data-action="desc"]')
     .addEventListener('click', () => {
-      params.api.applyColumnState({
+      params.columnApi.applyColumnState({
         state: [{ colId: params.column.getId(), sort: 'desc' }]
       });
       updateExprAndRequest(params.api);
