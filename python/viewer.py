@@ -21,7 +21,6 @@ def main():
     except Exception as e:
         print(json.dumps({"error": f"Failed to read file: {e}"}))
         return
-
     try:
         df = eval(args.expr, {"pl": pl}, {"df": df})
     except Exception as e:
