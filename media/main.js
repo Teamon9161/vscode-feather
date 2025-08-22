@@ -80,6 +80,7 @@ function openFilterMenu(params, button) {
       params.api.applyColumnState({
         state: [{ colId: params.column.getId(), sort: 'asc' }]
       });
+      updateExprAndRequest(params.api);
       closeMenu();
     });
   menuDiv
@@ -88,6 +89,7 @@ function openFilterMenu(params, button) {
       params.api.applyColumnState({
         state: [{ colId: params.column.getId(), sort: 'desc' }]
       });
+      updateExprAndRequest(params.api);
       closeMenu();
     });
   menuDiv
@@ -101,6 +103,7 @@ function openFilterMenu(params, button) {
         delete model[params.column.getId()];
       }
       params.api.setFilterModel(model);
+      updateExprAndRequest(params.api);
       closeMenu();
     });
 }
