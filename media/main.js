@@ -1,6 +1,54 @@
 const vscode = acquireVsCodeApi();
 let currentPage = 0;
 const gridDiv = document.getElementById('grid');
+const exprInput = document.getElementById('exprInput');
+
+exprInput.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const start = exprInput.selectionStart;
+    const end = exprInput.selectionEnd;
+    exprInput.value = exprInput.value.substring(0, start) + '  ' + exprInput.value.substring(end);
+    exprInput.selectionStart = exprInput.selectionEnd = start + 2;
+  }
+});
+
+class CustomHeader {
+  init(params) {
+    this.params = params;
+    this.eGui = document.createElement('div');
+    this.eGui.classList.add('custom-header');
+    this.eGui.innerHTML =
+      `<span class="custom-header-label">${params.displayName}</span>` +
+      `<span class="header-buttons">` +
+      `<button class="sort-asc">▲</button>` +
+      `<button class="sort-desc">▼</button>` +
+      `<button class="filter-btn">🔍</button>` +
+      `</span>`;
+    this.eGui.querySelector('.sort-asc').addEventListener('click', () => {
+      params.api.setSortModel([{ colId: params.column.getId(), sort: 'asc' }]);
+    });
+    this.eGui.querySelector('.sort-desc').addEventListener('click', () => {
+      params.api.setSortModel([{ colId: params.column.getId(), sort: 'desc' }]);
+    });
+    this.eGui.querySelector('.filter-btn').addEventListener('click', () => {
+      const val = prompt('Filter ' + params.displayName);
+      if (val !== null) {
+        const instance = params.api.getFilterInstance(params.column.getId());
+        if (instance) {
+          instance.setModel({ type: 'contains', filter: val });
+          params.api.onFilterChanged();
+        }
+      }
+    });
+    this.eGui.addEventListener('dblclick', () => {
+      params.api.autoSizeColumns([params.column.getId()]);
+    });
+  }
+  getGui() { return this.eGui; }
+  refresh() { return true; }
+}
+
 const gridOptions = {
   columnDefs: [],
   rowData: [],
@@ -8,19 +56,18 @@ const gridOptions = {
     sortable: true,
     filter: true,
     resizable: true,
-    floatingFilter: true
+    floatingFilter: true,
+    headerComponent: CustomHeader,
+    suppressMenu: true
   },
   onSortChanged: params => updateExprAndRequest(params.api),
-  onFilterChanged: params => updateExprAndRequest(params.api),
-  onColumnHeaderDoubleClicked: params => {
-    params.api.autoSizeColumns([params.column.getId()]);
-  }
+  onFilterChanged: params => updateExprAndRequest(params.api)
 };
 const gridApi = (new agGrid.Grid(gridDiv, gridOptions)).api;
 
 function request(page) {
   const pageSize = parseInt(document.getElementById('pageSize').value) || 100;
-  const expr = document.getElementById('exprInput').value || 'df';
+  const expr = exprInput.value || 'df';
   vscode.postMessage({ type: 'load', page, pageSize, expr });
 }
 
@@ -49,7 +96,7 @@ function buildExpression(api) {
 
 function updateExprAndRequest(api) {
   const expr = buildExpression(api);
-  document.getElementById('exprInput').value = expr;
+  exprInput.value = expr;
   request(0);
 }
 
@@ -66,12 +113,11 @@ window.addEventListener('message', event => {
   if (msg.type === 'data') {
     currentPage = msg.page;
     document.getElementById('pageNumber').value = msg.page + 1;
-    const colors = ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)',
-      'rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)', 'rgba(255, 159, 64, 0.2)'];
     gridApi.setColumnDefs(msg.columns.map((c, i) => ({
       headerName: c,
       field: c,
-      cellStyle: { backgroundColor: colors[i % colors.length] }
+      headerClass: `col-${i}`,
+      cellClass: `col-${i}`
     })));
     gridApi.setRowData(msg.rows);
     document.getElementById('status').textContent =
