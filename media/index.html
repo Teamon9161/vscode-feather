@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="{{csp}}" />
@@ -13,43 +14,54 @@
       flex-direction: column;
       height: 100vh;
     }
+
     .top-controls {
       display: flex;
       align-items: flex-start;
       margin-bottom: 8px;
     }
-    button, input {
+
+    button,
+    input {
       background-color: var(--vscode-button-background);
       color: var(--vscode-button-foreground);
       border: 1px solid var(--vscode-button-border, transparent);
       padding: 2px 6px;
     }
+
     button:hover {
       background-color: var(--vscode-button-hoverBackground);
     }
+
     input {
       background-color: var(--vscode-input-background);
       color: var(--vscode-input-foreground);
       border: 1px solid var(--vscode-input-border, transparent);
     }
+
     #editor {
       width: 60%;
       height: 100px;
     }
+
     #exprBtn {
       margin-left: auto;
     }
+
     #grid {
       flex: 1 1 auto;
       width: 100%;
     }
+
     .bottom-controls {
       margin-top: 8px;
     }
+
     .custom-header {
       display: flex;
       align-items: center;
     }
+
     .custom-header-button {
       background: transparent;
       border: none;
@@ -59,6 +71,7 @@
       align-items: center;
       color: var(--vscode-editor-foreground);
     }
+
     .filter-menu {
       position: absolute;
       z-index: 100;
@@ -70,6 +83,7 @@
       flex-direction: column;
       gap: 4px;
     }
+
     .filter-menu button {
       background-color: var(--vscode-button-background);
       color: var(--vscode-button-foreground);
@@ -77,9 +91,11 @@
       padding: 2px 6px;
       text-align: left;
     }
+
     .filter-menu button:hover {
       background-color: var(--vscode-button-hoverBackground);
     }
+
     .filter-menu input {
       background-color: var(--vscode-input-background);
       color: var(--vscode-input-foreground);
@@ -88,6 +104,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="top-controls">
     <div id="editor"></div>
@@ -104,4 +121,5 @@
   </div>
   <script src="{{mainUri}}"></script>
 </body>
+
 </html>
