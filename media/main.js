@@ -2,30 +2,12 @@ const vscode = acquireVsCodeApi();
 let currentPage = 0;
 const gridDiv = document.getElementById('grid');
 
-require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
-self.MonacoEnvironment = {
-  getWorkerUrl: function (moduleId, label) {
-    const proxy = `
-      self.MonacoEnvironment = { baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/' };
-      importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/base/worker/workerMain.js');
-    `;
-    return URL.createObjectURL(new Blob([proxy], { type: 'text/javascript' }));
-  }
-};
-
-let editor;
-require(['vs/editor/editor.main'], function () {
-  editor = monaco.editor.create(document.getElementById('editor'), {
-    value: 'df',
-    language: 'python',
-    theme: document.body.classList.contains('vscode-dark') ? 'vs-dark' : 'vs',
-    automaticLayout: true
-  });
-  request(0);
-});
+const editor = document.getElementById('editor');
+editor.value = 'df';
+request(0);
 
 function getExpr() {
-  return editor ? editor.getValue() : 'df';
+  return editor.value || 'df';
 }
 
 const filterSvg =
@@ -132,18 +114,14 @@ function applySort(colId, descending) {
   let expr = getExpr();
   expr = expr.replace(/\.sort\([^)]*\)/g, '');
   expr += `.sort("${colId}"${descending ? ', descending=True' : ''})`;
-  if (editor) {
-    editor.setValue(expr);
-  }
+  editor.value = expr;
   request(0);
 }
 
 function applyFilter(colId, value) {
   let expr = getExpr();
   expr += `.filter(pl.col("${colId}").str.contains("${value}"))`;
-  if (editor) {
-    editor.setValue(expr);
-  }
+  editor.value = expr;
   request(0);
 }
 

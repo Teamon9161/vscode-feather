@@ -5,7 +5,6 @@
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="{{csp}}" />
   <script src="{{agGridUri}}"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
   <style>
     body {
       color: var(--vscode-editor-foreground);
@@ -107,7 +106,7 @@
 
 <body>
   <div class="top-controls">
-    <div id="editor"></div>
+    <textarea id="editor" lang="python"></textarea>
     <button id="exprBtn">Run</button>
   </div>
   <div id="status"></div>
