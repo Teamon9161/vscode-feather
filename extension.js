@@ -90,14 +90,43 @@ function runPython(context, file, page, pageSize, filter) {
 function getWebviewContent() {
   return `<!DOCTYPE html>
 <html lang="en">
-<body>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src https://unpkg.com; style-src https://unpkg.com 'unsafe-inline';" />
+  <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css" />
+  <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-alpine.css" />
+  <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-alpine-dark.css" />
   <style>
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ddd; padding: 4px 8px; position: relative; }
-    th { background: #f5f5f5; user-select: none; }
-    th .resizer { position: absolute; right: 0; top: 0; width: 5px; height: 100%; cursor: col-resize; }
+    body {
+      color: var(--vscode-editor-foreground);
+      background-color: var(--vscode-editor-background);
+    }
+    .controls {
+      margin-bottom: 8px;
+    }
+    button, input {
+      background-color: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+      border: 1px solid var(--vscode-button-border, transparent);
+      padding: 2px 6px;
+    }
+    button:hover {
+      background-color: var(--vscode-button-hoverBackground);
+    }
+    input {
+      background-color: var(--vscode-input-background);
+      color: var(--vscode-input-foreground);
+      border: 1px solid var(--vscode-input-border, transparent);
+    }
+    #grid {
+      height: 70vh;
+      width: 100%;
+    }
   </style>
-  <div>
+</head>
+<body>
+  <div class="controls">
     <label>Page Size: <input id="pageSize" value="100" /></label>
     <label>Page: <input id="pageNumber" value="1" /></label>
     <button id="gotoBtn">Go</button>
@@ -107,35 +136,23 @@ function getWebviewContent() {
     <button id="filterBtn">Apply Filter</button>
   </div>
   <div id="status"></div>
-  <table id="data"></table>
+  <div id="grid" class="ag-theme-alpine"></div>
   <script>
     const vscode = acquireVsCodeApi();
     let currentPage = 0;
+    const gridDiv = document.getElementById('grid');
+    const themeClass = document.body.classList.contains('vscode-dark') ? 'ag-theme-alpine-dark' : 'ag-theme-alpine';
+    gridDiv.classList.add(themeClass);
+    const gridOptions = {
+      columnDefs: [],
+      rowData: [],
+      defaultColDef: { resizable: true, sortable: true, filter: true }
+    };
+    new agGrid.Grid(gridDiv, gridOptions);
     function request(page){
       const pageSize = parseInt(document.getElementById('pageSize').value) || 100;
       const filter = document.getElementById('filterInput').value;
       vscode.postMessage({ type: 'load', page, pageSize, filter });
-    }
-
-    function makeResizable(th) {
-      const resizer = document.createElement('div');
-      resizer.className = 'resizer';
-      th.appendChild(resizer);
-      let startX, startWidth;
-      resizer.addEventListener('mousedown', e => {
-        startX = e.pageX;
-        startWidth = th.offsetWidth;
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-      });
-      function onMouseMove(e){
-        const dx = e.pageX - startX;
-        th.style.width = (startWidth + dx) + 'px';
-      }
-      function onMouseUp(){
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-      }
     }
     document.getElementById('nextBtn').addEventListener('click', () => request(currentPage + 1));
     document.getElementById('prevBtn').addEventListener('click', () => request(Math.max(0, currentPage - 1)));
@@ -144,35 +161,21 @@ function getWebviewContent() {
       request(p);
     });
     document.getElementById('filterBtn').addEventListener('click', () => request(0));
+
     window.addEventListener('message', event => {
       const msg = event.data;
       if (msg.type === 'data') {
         currentPage = msg.page;
         document.getElementById('pageNumber').value = msg.page + 1;
-        const table = document.getElementById('data');
-        table.innerHTML = '';
-        const header = document.createElement('tr');
-        for (const c of msg.columns) {
-          const th = document.createElement('th');
-          th.textContent = c;
-          makeResizable(th);
-          header.appendChild(th);
-        }
-        table.appendChild(header);
-        for (const row of msg.rows) {
-          const tr = document.createElement('tr');
-          for (const c of msg.columns) {
-            const td = document.createElement('td');
-            td.textContent = row[c];
-            tr.appendChild(td);
-          }
-          table.appendChild(tr);
-        }
-        document.getElementById('status').textContent = 'Showing ' + (msg.page * msg.pageSize + 1) + '-' + (msg.page * msg.pageSize + msg.rows.length) + ' of ' + msg.totalRows;
+        gridOptions.api.setColumnDefs(msg.columns.map(c => ({ headerName: c, field: c })));
+        gridOptions.api.setRowData(msg.rows);
+        document.getElementById('status').textContent =
+          'Showing ' + (msg.page * msg.pageSize + 1) + '-' + (msg.page * msg.pageSize + msg.rows.length) + ' of ' + msg.totalRows;
       } else if (msg.type === 'error') {
         document.getElementById('status').textContent = msg.error;
       }
     });
+
     request(0);
   </script>
 </body>
