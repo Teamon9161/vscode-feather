@@ -9,11 +9,17 @@ except Exception as e:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Read feather file and output page as JSON")
-    parser.add_argument('file', help='Path to feather file')
-    parser.add_argument('--page', type=int, default=0, help='Page number (0-based)')
-    parser.add_argument('--page_size', type=int, default=100, help='Number of rows per page')
-    parser.add_argument('--expr', default='df', help='Polars expression using DataFrame variable df')
+    parser = argparse.ArgumentParser(
+        description="Read feather file and output page as JSON"
+    )
+    parser.add_argument("file", help="Path to feather file")
+    parser.add_argument("--page", type=int, default=0, help="Page number (0-based)")
+    parser.add_argument(
+        "--page_size", type=int, default=100, help="Number of rows per page"
+    )
+    parser.add_argument(
+        "--expr", default="df", help="Polars expression using DataFrame variable df"
+    )
     args = parser.parse_args()
 
     try:
@@ -21,6 +27,7 @@ def main():
     except Exception as e:
         print(json.dumps({"error": f"Failed to read file: {e}"}))
         return
+
     try:
         df = eval(args.expr, {"pl": pl}, {"df": df})
     except Exception as e:
@@ -34,11 +41,11 @@ def main():
     result = {
         "columns": df.columns,
         "rows": df_page.to_dicts(),
-        "totalRows": total_rows
+        "totalRows": total_rows,
     }
     # datetimes and other complex types need string conversion for JSON serialization
     print(json.dumps(result, default=str))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

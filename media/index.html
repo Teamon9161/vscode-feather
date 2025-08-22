@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="{{csp}}" />
   <script src="{{agGridUri}}"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
   <style>
     body {
       color: var(--vscode-editor-foreground);
@@ -12,35 +14,100 @@
       flex-direction: column;
       height: 100vh;
     }
-    .top-controls, .bottom-controls {
+
+    .top-controls {
+      display: flex;
+      align-items: flex-start;
       margin-bottom: 8px;
     }
-    button, input {
+
+    button,
+    input {
       background-color: var(--vscode-button-background);
       color: var(--vscode-button-foreground);
       border: 1px solid var(--vscode-button-border, transparent);
       padding: 2px 6px;
     }
+
     button:hover {
       background-color: var(--vscode-button-hoverBackground);
     }
+
     input {
       background-color: var(--vscode-input-background);
       color: var(--vscode-input-foreground);
       border: 1px solid var(--vscode-input-border, transparent);
     }
+
+    #editor {
+      width: 60%;
+      height: 100px;
+    }
+
+    #exprBtn {
+      margin-left: auto;
+    }
+
     #grid {
       flex: 1 1 auto;
       width: 100%;
     }
+
     .bottom-controls {
       margin-top: 8px;
     }
+
+    .custom-header {
+      display: flex;
+      align-items: center;
+    }
+
+    .custom-header-button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0 4px;
+      display: flex;
+      align-items: center;
+      color: var(--vscode-editor-foreground);
+    }
+
+    .filter-menu {
+      position: absolute;
+      z-index: 100;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      border: 1px solid var(--vscode-editorWidget-border, var(--vscode-editor-foreground));
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .filter-menu button {
+      background-color: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+      border: 1px solid var(--vscode-button-border, transparent);
+      padding: 2px 6px;
+      text-align: left;
+    }
+
+    .filter-menu button:hover {
+      background-color: var(--vscode-button-hoverBackground);
+    }
+
+    .filter-menu input {
+      background-color: var(--vscode-input-background);
+      color: var(--vscode-input-foreground);
+      border: 1px solid var(--vscode-input-border, transparent);
+      padding: 2px;
+    }
   </style>
 </head>
+
 <body>
   <div class="top-controls">
-    <input id="exprInput" value="df" style="width:60%" />
+    <div id="editor"></div>
     <button id="exprBtn">Run</button>
   </div>
   <div id="status"></div>
@@ -54,4 +121,5 @@
   </div>
   <script src="{{mainUri}}"></script>
 </body>
+
 </html>
