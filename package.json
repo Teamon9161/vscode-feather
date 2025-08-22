@@ -1,0 +1,59 @@
+{
+  "name": "vscode-feather-viewer",
+  "displayName": "Feather Viewer",
+  "description": "View Feather files using Python polars",
+  "version": "0.0.1",
+  "publisher": "feather",
+  "engines": {
+    "vscode": "^1.50.0"
+  },
+  "activationEvents": [
+    "onCommand:feather.openFeather",
+    "onCustomEditor:feather.viewer"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "feather.openFeather",
+        "title": "Open Feather File"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "feather.openFeather",
+          "when": "resourceExtname == .feather",
+          "group": "navigation"
+        }
+      ]
+    },
+    "customEditors": [
+      {
+        "viewType": "feather.viewer",
+        "displayName": "Feather Viewer",
+        "selector": [
+          {
+            "filenamePattern": "*.feather"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Feather Viewer",
+      "properties": {
+        "feather.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Path to the Python executable"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "echo 'No tests'"
+  },
+  "dependencies": {}
+}
