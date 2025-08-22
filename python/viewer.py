@@ -5,7 +5,7 @@ try:
     import polars as pl
 except Exception as e:
     print(json.dumps({"error": f"Failed to import polars: {e}"}))
-    raise SystemExit(0)
+    raise SystemExit(0) from None
 
 
 def main():

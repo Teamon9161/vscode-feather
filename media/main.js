@@ -131,7 +131,7 @@ function request(page) {
 function applySort(colId, descending) {
   let expr = getExpr();
   expr = expr.replace(/\.sort\([^)]*\)/g, '');
-  expr += `.sort("${colId}"${descending ? ', descending=true' : ''})`;
+  expr += `.sort("${colId}"${descending ? ', descending=True' : ''})`;
   if (editor) {
     editor.setValue(expr);
   }
