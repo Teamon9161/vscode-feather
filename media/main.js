@@ -95,11 +95,9 @@ window.addEventListener('message', event => {
   if (msg.type === 'data') {
     currentPage = msg.page;
     document.getElementById('pageNumber').value = msg.page + 1;
-    gridApi.setColumnDefs(msg.columns.map((c, i) => ({
+    gridApi.setColumnDefs(msg.columns.map(c => ({
       headerName: c,
-      field: c,
-      headerClass: `col-${i}`,
-      cellClass: `col-${i}`
+      field: c
     })));
     gridApi.setRowData(msg.rows);
     document.getElementById('status').textContent =
