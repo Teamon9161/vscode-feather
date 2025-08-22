@@ -39,7 +39,8 @@ def main():
         "rows": df_page.to_dicts(),
         "totalRows": total_rows
     }
-    print(json.dumps(result))
+    # datetimes and other complex types need string conversion for JSON serialization
+    print(json.dumps(result, default=str))
 
 
 if __name__ == '__main__':
