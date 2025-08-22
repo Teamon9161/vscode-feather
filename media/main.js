@@ -77,33 +77,22 @@ function openFilterMenu(params, button) {
   menuDiv
     .querySelector('[data-action="asc"]')
     .addEventListener('click', () => {
-      params.columnApi.applyColumnState({
-        state: [{ colId: params.column.getId(), sort: 'asc' }]
-      });
-      updateExprAndRequest(params.api);
+      applySort(params.column.getId(), false);
       closeMenu();
     });
   menuDiv
     .querySelector('[data-action="desc"]')
     .addEventListener('click', () => {
-      params.columnApi.applyColumnState({
-        state: [{ colId: params.column.getId(), sort: 'desc' }]
-      });
-      updateExprAndRequest(params.api);
+      applySort(params.column.getId(), true);
       closeMenu();
     });
   menuDiv
     .querySelector('[data-action="apply"]')
     .addEventListener('click', () => {
       const val = menuDiv.querySelector('.filter-input').value;
-      const model = params.api.getFilterModel();
       if (val) {
-        model[params.column.getId()] = { type: 'contains', filter: val };
-      } else {
-        delete model[params.column.getId()];
+        applyFilter(params.column.getId(), val);
       }
-      params.api.setFilterModel(model);
-      updateExprAndRequest(params.api);
       closeMenu();
     });
 }
@@ -126,13 +115,9 @@ const gridOptions = {
   rowData: [],
   components: { customHeader: CustomHeader },
   defaultColDef: {
-    sortable: true,
-    filter: 'agTextColumnFilter',
     resizable: true,
     headerComponent: 'customHeader'
-  },
-  onSortChanged: params => updateExprAndRequest(params.api),
-  onFilterChanged: params => updateExprAndRequest(params.api)
+  }
 };
 new agGrid.Grid(gridDiv, gridOptions);
 const gridApi = gridOptions.api;
@@ -143,31 +128,19 @@ function request(page) {
   vscode.postMessage({ type: 'load', page, pageSize, expr });
 }
 
-function buildExpression(api) {
-  let expr = 'df';
-  const sortState = api.getColumnState().find(c => c.sort);
-  if (sortState) {
-    expr += `.sort("${sortState.colId}"${sortState.sort === 'desc' ? ', descending=true' : ''})`;
+function applySort(colId, descending) {
+  let expr = getExpr();
+  expr = expr.replace(/\.sort\([^)]*\)/g, '');
+  expr += `.sort("${colId}"${descending ? ', descending=true' : ''})`;
+  if (editor) {
+    editor.setValue(expr);
   }
-  const filterModel = api.getFilterModel();
-  const filters = [];
-  for (const [col, model] of Object.entries(filterModel)) {
-    if (model.filter != null && model.filter !== '') {
-      if (model.type === 'contains') {
-        filters.push(`pl.col("${col}").str.contains("${model.filter}")`);
-      } else {
-        filters.push(`pl.col("${col}") == "${model.filter}"`);
-      }
-    }
-  }
-  if (filters.length) {
-    expr += `.filter(${filters.join(' & ')})`;
-  }
-  return expr;
+  request(0);
 }
 
-function updateExprAndRequest(api) {
-  const expr = buildExpression(api);
+function applyFilter(colId, value) {
+  let expr = getExpr();
+  expr += `.filter(pl.col("${colId}").str.contains("${value}"))`;
   if (editor) {
     editor.setValue(expr);
   }
