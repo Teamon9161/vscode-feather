@@ -2,29 +2,27 @@ const vscode = require('vscode');
 const path = require('path');
 const child_process = require('child_process');
 
-function activate(context) {
-  let disposable = vscode.commands.registerCommand('feather.openFeather', async function () {
-    const fileUris = await vscode.window.showOpenDialog({
-      canSelectMany: false,
-      filters: { 'Feather Files': ['feather'] }
-    });
-    if (!fileUris || fileUris.length === 0) {
-      return;
-    }
-    const filePath = fileUris[0].fsPath;
-    const panel = vscode.window.createWebviewPanel('featherViewer', 'Feather Viewer', vscode.ViewColumn.One, {
-      enableScripts: true
-    });
 
-    panel.webview.html = getWebviewContent();
+class FeatherViewerProvider {
+  constructor(context) {
+    this.context = context;
+  }
 
-    panel.webview.onDidReceiveMessage(async message => {
+  openCustomDocument(uri) {
+    return { uri, dispose() {} };
+  }
+
+  async resolveCustomEditor(document, webviewPanel) {
+    webviewPanel.webview.options = { enableScripts: true };
+    webviewPanel.webview.html = getWebviewContent();
+
+    webviewPanel.webview.onDidReceiveMessage(async message => {
       if (message.type === 'load') {
-        const result = await runPython(context, filePath, message.page, message.pageSize, message.filter);
+        const result = await runPython(this.context, document.uri.fsPath, message.page, message.pageSize, message.filter);
         if (result.error) {
-          panel.webview.postMessage({ type: 'error', error: result.error });
+          webviewPanel.webview.postMessage({ type: 'error', error: result.error });
         } else {
-          panel.webview.postMessage({
+          webviewPanel.webview.postMessage({
             type: 'data',
             columns: result.columns,
             rows: result.rows,
@@ -35,13 +33,36 @@ function activate(context) {
         }
       }
     });
+  }
+}
+
+function activate(context) {
+  const provider = new FeatherViewerProvider(context);
+  context.subscriptions.push(
+    vscode.window.registerCustomEditorProvider('feather.viewer', provider, { supportsMultipleEditorsPerDocument: false })
+  );
+
+  const openCommand = vscode.commands.registerCommand('feather.openFeather', async (uri) => {
+    if (!uri) {
+      const fileUris = await vscode.window.showOpenDialog({
+        canSelectMany: false,
+        filters: { 'Feather Files': ['feather'] }
+      });
+      if (!fileUris || fileUris.length === 0) {
+        return;
+      }
+      uri = fileUris[0];
+    }
+    await vscode.commands.executeCommand('vscode.openWith', uri, 'feather.viewer');
   });
 
-  context.subscriptions.push(disposable);
+  context.subscriptions.push(openCommand);
 }
+
 exports.activate = activate;
 
-function deactivate() { }
+function deactivate() {}
+
 exports.deactivate = deactivate;
 
 function runPython(context, file, page, pageSize, filter) {
