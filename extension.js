@@ -91,6 +91,12 @@ function getWebviewContent() {
   return `<!DOCTYPE html>
 <html lang="en">
 <body>
+  <style>
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 4px 8px; position: relative; }
+    th { background: #f5f5f5; user-select: none; }
+    th .resizer { position: absolute; right: 0; top: 0; width: 5px; height: 100%; cursor: col-resize; }
+  </style>
   <div>
     <label>Page Size: <input id="pageSize" value="100" /></label>
     <label>Page: <input id="pageNumber" value="1" /></label>
@@ -110,6 +116,27 @@ function getWebviewContent() {
       const filter = document.getElementById('filterInput').value;
       vscode.postMessage({ type: 'load', page, pageSize, filter });
     }
+
+    function makeResizable(th) {
+      const resizer = document.createElement('div');
+      resizer.className = 'resizer';
+      th.appendChild(resizer);
+      let startX, startWidth;
+      resizer.addEventListener('mousedown', e => {
+        startX = e.pageX;
+        startWidth = th.offsetWidth;
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+      function onMouseMove(e){
+        const dx = e.pageX - startX;
+        th.style.width = (startWidth + dx) + 'px';
+      }
+      function onMouseUp(){
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+    }
     document.getElementById('nextBtn').addEventListener('click', () => request(currentPage + 1));
     document.getElementById('prevBtn').addEventListener('click', () => request(Math.max(0, currentPage - 1)));
     document.getElementById('gotoBtn').addEventListener('click', () => {
@@ -128,6 +155,7 @@ function getWebviewContent() {
         for (const c of msg.columns) {
           const th = document.createElement('th');
           th.textContent = c;
+          makeResizable(th);
           header.appendChild(th);
         }
         table.appendChild(header);
