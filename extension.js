@@ -146,7 +146,7 @@ function getWebviewContent(context, webview) {
     let currentPage = 0;
     const gridDiv = document.getElementById('grid');
     const gridOptions = { columnDefs: [], rowData: [] };
-    new agGrid.Grid(gridDiv, gridOptions);
+    const gridApi = (new agGrid.Grid(gridDiv, gridOptions)).api;
 
     function request(page){
       const pageSize = parseInt(document.getElementById('pageSize').value) || 100;
@@ -167,8 +167,8 @@ function getWebviewContent(context, webview) {
       if (msg.type === 'data') {
         currentPage = msg.page;
         document.getElementById('pageNumber').value = msg.page + 1;
-        gridOptions.api.setColumnDefs(msg.columns.map(c => ({ headerName: c, field: c })));
-        gridOptions.api.setRowData(msg.rows);
+        gridApi.setColumnDefs(msg.columns.map(c => ({ headerName: c, field: c })));
+        gridApi.setRowData(msg.rows);
         document.getElementById('status').textContent =
           'Showing ' + (msg.page * msg.pageSize + 1) + '-' + (msg.page * msg.pageSize + msg.rows.length) + ' of ' + msg.totalRows;
       } else if (msg.type === 'error') {
