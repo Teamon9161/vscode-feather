@@ -12,8 +12,11 @@ class FeatherViewerProvider {
   }
 
   async resolveCustomEditor(document, webviewPanel) {
-    webviewPanel.webview.options = { enableScripts: true };
-    webviewPanel.webview.html = getWebviewContent();
+    webviewPanel.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'media')]
+    };
+    webviewPanel.webview.html = getWebviewContent(this.context, webviewPanel.webview);
 
     webviewPanel.webview.onDidReceiveMessage(async message => {
       if (message.type === 'load') {
@@ -87,16 +90,17 @@ function runPython(context, file, page, pageSize, filter) {
   });
 }
 
-function getWebviewContent() {
+function getWebviewContent(context, webview) {
+  const scriptUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, 'media', 'ag-grid-community.min.js')
+  );
+  const csp = `default-src 'none'; script-src ${webview.cspSource} 'unsafe-inline'; style-src ${webview.cspSource} 'unsafe-inline';`;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src https://unpkg.com 'unsafe-inline'; style-src https://unpkg.com 'unsafe-inline';" />
-  <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css" />
-  <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-alpine.css" />
-  <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-alpine-dark.css" />
+    <meta http-equiv="Content-Security-Policy" content="${csp}" />
+  <script src="${scriptUri}"></script>
   <style>
     body {
       color: var(--vscode-editor-foreground);
@@ -136,18 +140,12 @@ function getWebviewContent() {
     <button id="filterBtn">Apply Filter</button>
   </div>
   <div id="status"></div>
-  <div id="grid" class="ag-theme-alpine"></div>
+  <div id="grid"></div>
   <script>
     const vscode = acquireVsCodeApi();
     let currentPage = 0;
     const gridDiv = document.getElementById('grid');
-    const themeClass = document.body.classList.contains('vscode-dark') ? 'ag-theme-alpine-dark' : 'ag-theme-alpine';
-    gridDiv.classList.add(themeClass);
-    const gridOptions = {
-      columnDefs: [],
-      rowData: [],
-      defaultColDef: { resizable: true, sortable: true, filter: true }
-    };
+    const gridOptions = { columnDefs: [], rowData: [] };
     new agGrid.Grid(gridDiv, gridOptions);
 
     function request(page){
