@@ -34,8 +34,10 @@ const gridOptions = {
   defaultColDef: {
     sortable: true,
     filter: 'agTextColumnFilter',
-    floatingFilter: true,
-    resizable: true
+    resizable: true,
+    suppressMenuHide: true,
+    menuTabs: ['filterMenuTab', 'generalMenuTab'],
+    headerComponentParams: { menuIcon: 'filter' }
   },
   onSortChanged: params => updateExprAndRequest(params.api),
   onFilterChanged: params => updateExprAndRequest(params.api)
