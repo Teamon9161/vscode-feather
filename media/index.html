@@ -48,6 +48,20 @@
     .bottom-controls {
       margin-top: 8px;
     }
+    #grid.ag-theme-alpine {
+      --ag-background-color: var(--vscode-editor-background);
+      --ag-header-background-color: var(--vscode-editor-background);
+      --ag-foreground-color: var(--vscode-editor-foreground);
+      --ag-header-foreground-color: var(--vscode-editor-foreground);
+    }
+    .ag-theme-alpine .ag-cell,
+    .ag-theme-alpine .ag-header-cell {
+      border-right: 1px solid var(--vscode-editor-foreground);
+    }
+    .ag-theme-alpine .ag-row,
+    .ag-theme-alpine .ag-header-row {
+      border-bottom: 1px solid var(--vscode-editor-foreground);
+    }
     .ag-theme-alpine .ag-cell.col-0, .ag-theme-alpine .ag-header-cell.col-0 { color: #ff6384; }
     .ag-theme-alpine .ag-cell.col-1, .ag-theme-alpine .ag-header-cell.col-1 { color: #36a2eb; }
     .ag-theme-alpine .ag-cell.col-2, .ag-theme-alpine .ag-header-cell.col-2 { color: #ffce56; }
