@@ -2,6 +2,7 @@ const vscode = require('vscode');
 const path = require('path');
 const child_process = require('child_process');
 
+
 class FeatherViewerProvider {
   constructor(context) {
     this.context = context;
@@ -61,6 +62,7 @@ function activate(context) {
 exports.activate = activate;
 
 function deactivate() {}
+
 exports.deactivate = deactivate;
 
 function runPython(context, file, page, pageSize, filter) {

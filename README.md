@@ -14,3 +14,4 @@ View and explore `.feather` files directly inside VS Code using Python's [polars
 - Open a `.feather` file from the explorer (double-click) or right-click and choose **Open Feather File**.
 - You can also run the command **Feather: Open Feather File** from the Command Palette.
 - Use the webview controls to navigate pages or apply filters.
+
