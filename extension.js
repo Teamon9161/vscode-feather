@@ -1,5 +1,6 @@
 const vscode = require('vscode');
 const path = require('path');
+const fs = require('fs');
 const child_process = require('child_process');
 
 class FeatherViewerProvider {
@@ -20,7 +21,7 @@ class FeatherViewerProvider {
 
     webviewPanel.webview.onDidReceiveMessage(async message => {
       if (message.type === 'load') {
-        const result = await runPython(this.context, document.uri.fsPath, message.page, message.pageSize, message.filter);
+        const result = await runPython(this.context, document.uri.fsPath, message.page, message.pageSize, message.expr);
         if (result.error) {
           webviewPanel.webview.postMessage({ type: 'error', error: result.error });
         } else {
@@ -66,15 +67,12 @@ exports.activate = activate;
 function deactivate() {}
 exports.deactivate = deactivate;
 
-function runPython(context, file, page, pageSize, filter) {
+function runPython(context, file, page, pageSize, expr) {
   return new Promise(resolve => {
     const config = vscode.workspace.getConfiguration('feather');
     const pythonPath = config.get('pythonPath', 'python');
     const script = context.asAbsolutePath(path.join('python', 'viewer.py'));
-    const args = [script, file, '--page', String(page), '--page_size', String(pageSize)];
-    if (filter) {
-      args.push('--filter', filter);
-    }
+    const args = [script, file, '--page', String(page), '--page_size', String(pageSize), '--expr', expr || 'df'];
     const py = child_process.spawn(pythonPath, args);
     let out = '';
     let err = '';
@@ -91,93 +89,17 @@ function runPython(context, file, page, pageSize, filter) {
 }
 
 function getWebviewContent(context, webview) {
-  const scriptUri = webview.asWebviewUri(
+  const htmlPath = path.join(context.extensionPath, 'media', 'index.html');
+  let html = fs.readFileSync(htmlPath, 'utf8');
+  const agGridUri = webview.asWebviewUri(
     vscode.Uri.joinPath(context.extensionUri, 'media', 'ag-grid-community.min.js')
   );
+  const mainUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, 'media', 'main.js')
+  );
   const csp = `default-src 'none'; script-src ${webview.cspSource} 'unsafe-inline'; style-src ${webview.cspSource} 'unsafe-inline';`;
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="${csp}" />
-  <script src="${scriptUri}"></script>
-  <style>
-    body {
-      color: var(--vscode-editor-foreground);
-      background-color: var(--vscode-editor-background);
-    }
-    .controls {
-      margin-bottom: 8px;
-    }
-    button, input {
-      background-color: var(--vscode-button-background);
-      color: var(--vscode-button-foreground);
-      border: 1px solid var(--vscode-button-border, transparent);
-      padding: 2px 6px;
-    }
-    button:hover {
-      background-color: var(--vscode-button-hoverBackground);
-    }
-    input {
-      background-color: var(--vscode-input-background);
-      color: var(--vscode-input-foreground);
-      border: 1px solid var(--vscode-input-border, transparent);
-    }
-    #grid {
-      height: 70vh;
-      width: 100%;
-    }
-  </style>
-</head>
-<body>
-  <div class="controls">
-    <label>Page Size: <input id="pageSize" value="100" /></label>
-    <label>Page: <input id="pageNumber" value="1" /></label>
-    <button id="gotoBtn">Go</button>
-    <button id="prevBtn">Prev</button>
-    <button id="nextBtn">Next</button>
-    <input id="filterInput" placeholder='Filter (e.g., col("column") == 1)' />
-    <button id="filterBtn">Apply Filter</button>
-  </div>
-  <div id="status"></div>
-  <div id="grid"></div>
-  <script>
-    const vscode = acquireVsCodeApi();
-    let currentPage = 0;
-    const gridDiv = document.getElementById('grid');
-    const gridOptions = { columnDefs: [], rowData: [] };
-    const gridApi = (new agGrid.Grid(gridDiv, gridOptions)).api;
-
-    function request(page){
-      const pageSize = parseInt(document.getElementById('pageSize').value) || 100;
-      const filter = document.getElementById('filterInput').value;
-      vscode.postMessage({ type: 'load', page, pageSize, filter });
-    }
-
-    document.getElementById('nextBtn').addEventListener('click', () => request(currentPage + 1));
-    document.getElementById('prevBtn').addEventListener('click', () => request(Math.max(0, currentPage - 1)));
-    document.getElementById('gotoBtn').addEventListener('click', () => {
-      const p = parseInt(document.getElementById('pageNumber').value) - 1;
-      request(p);
-    });
-    document.getElementById('filterBtn').addEventListener('click', () => request(0));
-
-    window.addEventListener('message', event => {
-      const msg = event.data;
-      if (msg.type === 'data') {
-        currentPage = msg.page;
-        document.getElementById('pageNumber').value = msg.page + 1;
-        gridApi.setColumnDefs(msg.columns.map(c => ({ headerName: c, field: c })));
-        gridApi.setRowData(msg.rows);
-        document.getElementById('status').textContent =
-          'Showing ' + (msg.page * msg.pageSize + 1) + '-' + (msg.page * msg.pageSize + msg.rows.length) + ' of ' + msg.totalRows;
-      } else if (msg.type === 'error') {
-        document.getElementById('status').textContent = msg.error;
-      }
-    });
-
-    request(0);
-  </script>
-</body>
-</html>`;
+  html = html.replace('{{agGridUri}}', agGridUri.toString());
+  html = html.replace('{{mainUri}}', mainUri.toString());
+  html = html.replace('{{csp}}', csp);
+  return html;
 }

@@ -13,7 +13,7 @@ def main():
     parser.add_argument('file', help='Path to feather file')
     parser.add_argument('--page', type=int, default=0, help='Page number (0-based)')
     parser.add_argument('--page_size', type=int, default=100, help='Number of rows per page')
-    parser.add_argument('--filter', default='', help='Polars filter expression, e.g., col("a") == 1')
+    parser.add_argument('--expr', default='df', help='Polars expression using DataFrame variable df')
     args = parser.parse_args()
 
     try:
@@ -22,13 +22,11 @@ def main():
         print(json.dumps({"error": f"Failed to read file: {e}"}))
         return
 
-    if args.filter:
-        try:
-            expr = eval(args.filter, {"pl": pl, "col": pl.col})
-            df = df.filter(expr)
-        except Exception as e:
-            print(json.dumps({"error": f"Bad filter expression: {e}"}))
-            return
+    try:
+        df = eval(args.expr, {"pl": pl}, {"df": df})
+    except Exception as e:
+        print(json.dumps({"error": f"Bad expression: {e}"}))
+        return
 
     total_rows = df.height
     start = args.page * args.page_size

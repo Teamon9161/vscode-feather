@@ -4,7 +4,7 @@ View and explore `.feather` files directly inside VS Code using Python's [polars
 
 ## Features
 - Pagination with next/previous and jump to page
-- Apply filters using polars expressions, e.g., `col("a") == 1`
+- Apply arbitrary Polars code to transform the DataFrame before display (default `df`)
 - Configurable Python interpreter path (`feather.pythonPath`), defaults to `python`
 - Interactive grid with column resizing, sorting, and filtering powered by [AG Grid](https://www.ag-grid.com/) (bundled for offline use)
 - Theme-aware controls styled using VS Code color variables
@@ -15,4 +15,4 @@ View and explore `.feather` files directly inside VS Code using Python's [polars
 ## Usage
 - Open a `.feather` file from the explorer (double-click) or right-click and choose **Open Feather File**.
 - You can also run the command **Feather: Open Feather File** from the Command Palette.
-- Use the webview controls to navigate pages or apply filters.
+- Enter a Polars expression at the top to sort/filter, then use the bottom controls to navigate pages.
