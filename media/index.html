@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="{{csp}}" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@30.0.0/dist/styles/ag-grid.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@30.0.0/dist/styles/ag-theme-alpine.min.css" />
   <script src="{{agGridUri}}"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
   <style>
     body {
       color: var(--vscode-editor-foreground);
@@ -15,7 +18,7 @@
     .top-controls, .bottom-controls {
       margin-bottom: 8px;
     }
-    button, input, textarea {
+    button, input {
       background-color: var(--vscode-button-background);
       color: var(--vscode-button-foreground);
       border: 1px solid var(--vscode-button-border, transparent);
@@ -24,10 +27,14 @@
     button:hover {
       background-color: var(--vscode-button-hoverBackground);
     }
-    input, textarea {
+    input {
       background-color: var(--vscode-input-background);
       color: var(--vscode-input-foreground);
       border: 1px solid var(--vscode-input-border, transparent);
+    }
+    #editor {
+      width: 60%;
+      height: 100px;
     }
     #grid {
       flex: 1 1 auto;
@@ -36,35 +43,21 @@
     .bottom-controls {
       margin-top: 8px;
     }
-    .custom-header {
-      display: flex;
-      align-items: center;
-    }
-    .custom-header .header-buttons {
-      margin-left: auto;
-    }
-    .custom-header button {
-      background: transparent;
-      border: none;
-      color: var(--vscode-editor-foreground);
-      cursor: pointer;
-      padding: 0 2px;
-    }
-    .ag-cell.col-0, .ag-header-cell.col-0 { background-color: rgba(255, 99, 132, 0.1); }
-    .ag-cell.col-1, .ag-header-cell.col-1 { background-color: rgba(54, 162, 235, 0.1); }
-    .ag-cell.col-2, .ag-header-cell.col-2 { background-color: rgba(255, 206, 86, 0.1); }
-    .ag-cell.col-3, .ag-header-cell.col-3 { background-color: rgba(75, 192, 192, 0.1); }
-    .ag-cell.col-4, .ag-header-cell.col-4 { background-color: rgba(153, 102, 255, 0.1); }
-    .ag-cell.col-5, .ag-header-cell.col-5 { background-color: rgba(255, 159, 64, 0.1); }
+    .ag-theme-alpine .ag-cell.col-0, .ag-theme-alpine .ag-header-cell.col-0 { background-color: rgba(255, 99, 132, 0.2) !important; }
+    .ag-theme-alpine .ag-cell.col-1, .ag-theme-alpine .ag-header-cell.col-1 { background-color: rgba(54, 162, 235, 0.2) !important; }
+    .ag-theme-alpine .ag-cell.col-2, .ag-theme-alpine .ag-header-cell.col-2 { background-color: rgba(255, 206, 86, 0.2) !important; }
+    .ag-theme-alpine .ag-cell.col-3, .ag-theme-alpine .ag-header-cell.col-3 { background-color: rgba(75, 192, 192, 0.2) !important; }
+    .ag-theme-alpine .ag-cell.col-4, .ag-theme-alpine .ag-header-cell.col-4 { background-color: rgba(153, 102, 255, 0.2) !important; }
+    .ag-theme-alpine .ag-cell.col-5, .ag-theme-alpine .ag-header-cell.col-5 { background-color: rgba(255, 159, 64, 0.2) !important; }
   </style>
 </head>
 <body>
   <div class="top-controls">
-    <textarea id="exprInput" rows="3" style="width:60%">df</textarea>
+    <div id="editor"></div>
     <button id="exprBtn">Run</button>
   </div>
   <div id="status"></div>
-  <div id="grid"></div>
+  <div id="grid" class="ag-theme-alpine"></div>
   <div class="bottom-controls">
     <label>Page Size: <input id="pageSize" value="100" /></label>
     <label>Page: <input id="pageNumber" value="1" /></label>

@@ -1,52 +1,31 @@
 const vscode = acquireVsCodeApi();
 let currentPage = 0;
 const gridDiv = document.getElementById('grid');
-const exprInput = document.getElementById('exprInput');
 
-exprInput.addEventListener('keydown', e => {
-  if (e.key === 'Tab') {
-    e.preventDefault();
-    const start = exprInput.selectionStart;
-    const end = exprInput.selectionEnd;
-    exprInput.value = exprInput.value.substring(0, start) + '  ' + exprInput.value.substring(end);
-    exprInput.selectionStart = exprInput.selectionEnd = start + 2;
+require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
+self.MonacoEnvironment = {
+  getWorkerUrl: function (moduleId, label) {
+    const proxy = `
+      self.MonacoEnvironment = { baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/' };
+      importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/base/worker/workerMain.js');
+    `;
+    return URL.createObjectURL(new Blob([proxy], { type: 'text/javascript' }));
   }
+};
+
+let editor;
+require(['vs/editor/editor.main'], function () {
+  editor = monaco.editor.create(document.getElementById('editor'), {
+    value: 'df',
+    language: 'python',
+    theme: document.body.classList.contains('vscode-dark') ? 'vs-dark' : 'vs',
+    automaticLayout: true
+  });
+  request(0);
 });
 
-class CustomHeader {
-  init(params) {
-    this.params = params;
-    this.eGui = document.createElement('div');
-    this.eGui.classList.add('custom-header');
-    this.eGui.innerHTML =
-      `<span class="custom-header-label">${params.displayName}</span>` +
-      `<span class="header-buttons">` +
-      `<button class="sort-asc">▲</button>` +
-      `<button class="sort-desc">▼</button>` +
-      `<button class="filter-btn">🔍</button>` +
-      `</span>`;
-    this.eGui.querySelector('.sort-asc').addEventListener('click', () => {
-      params.api.setSortModel([{ colId: params.column.getId(), sort: 'asc' }]);
-    });
-    this.eGui.querySelector('.sort-desc').addEventListener('click', () => {
-      params.api.setSortModel([{ colId: params.column.getId(), sort: 'desc' }]);
-    });
-    this.eGui.querySelector('.filter-btn').addEventListener('click', () => {
-      const val = prompt('Filter ' + params.displayName);
-      if (val !== null) {
-        const instance = params.api.getFilterInstance(params.column.getId());
-        if (instance) {
-          instance.setModel({ type: 'contains', filter: val });
-          params.api.onFilterChanged();
-        }
-      }
-    });
-    this.eGui.addEventListener('dblclick', () => {
-      params.api.autoSizeColumns([params.column.getId()]);
-    });
-  }
-  getGui() { return this.eGui; }
-  refresh() { return true; }
+function getExpr() {
+  return editor ? editor.getValue() : 'df';
 }
 
 const gridOptions = {
@@ -54,20 +33,19 @@ const gridOptions = {
   rowData: [],
   defaultColDef: {
     sortable: true,
-    filter: true,
-    resizable: true,
+    filter: 'agTextColumnFilter',
     floatingFilter: true,
-    headerComponent: CustomHeader,
-    suppressMenu: true
+    resizable: true
   },
   onSortChanged: params => updateExprAndRequest(params.api),
   onFilterChanged: params => updateExprAndRequest(params.api)
 };
-const gridApi = (new agGrid.Grid(gridDiv, gridOptions)).api;
+new agGrid.Grid(gridDiv, gridOptions);
+const gridApi = gridOptions.api;
 
 function request(page) {
   const pageSize = parseInt(document.getElementById('pageSize').value) || 100;
-  const expr = exprInput.value || 'df';
+  const expr = getExpr();
   vscode.postMessage({ type: 'load', page, pageSize, expr });
 }
 
@@ -96,7 +74,9 @@ function buildExpression(api) {
 
 function updateExprAndRequest(api) {
   const expr = buildExpression(api);
-  exprInput.value = expr;
+  if (editor) {
+    editor.setValue(expr);
+  }
   request(0);
 }
 
@@ -121,10 +101,9 @@ window.addEventListener('message', event => {
     })));
     gridApi.setRowData(msg.rows);
     document.getElementById('status').textContent =
-      'Showing ' + (msg.page * msg.pageSize + 1) + '-' + (msg.page * msg.pageSize + msg.rows.length) + ' of ' + msg.totalRows;
+      'Showing ' + (msg.page * msg.pageSize + 1) + '-' +
+      (msg.page * msg.pageSize + msg.rows.length) + ' of ' + msg.totalRows;
   } else if (msg.type === 'error') {
     document.getElementById('status').textContent = msg.error;
   }
 });
-
-request(0);

@@ -97,7 +97,7 @@ function getWebviewContent(context, webview) {
   const mainUri = webview.asWebviewUri(
     vscode.Uri.joinPath(context.extensionUri, 'media', 'main.js')
   );
-  const csp = `default-src 'none'; script-src ${webview.cspSource} 'unsafe-inline'; style-src ${webview.cspSource} 'unsafe-inline';`;
+  const csp = `default-src 'none'; img-src ${webview.cspSource} https:; script-src ${webview.cspSource} https: 'unsafe-inline'; style-src ${webview.cspSource} https: 'unsafe-inline'; font-src ${webview.cspSource} https:; worker-src blob:;`;
   html = html.replace('{{agGridUri}}', agGridUri.toString());
   html = html.replace('{{mainUri}}', mainUri.toString());
   html = html.replace('{{csp}}', csp);
