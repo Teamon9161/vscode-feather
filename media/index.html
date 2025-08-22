@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="{{csp}}" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@30.0.0/dist/styles/ag-grid.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@30.0.0/dist/styles/ag-theme-alpine.min.css" />
+  <link rel="stylesheet" href="{{agGridCssUri}}" />
+  <link rel="stylesheet" href="{{agThemeCssUri}}" />
   <script src="{{agGridUri}}"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
   <style>
@@ -15,7 +15,9 @@
       flex-direction: column;
       height: 100vh;
     }
-    .top-controls, .bottom-controls {
+    .top-controls {
+      display: flex;
+      align-items: flex-start;
       margin-bottom: 8px;
     }
     button, input {
@@ -35,6 +37,9 @@
     #editor {
       width: 60%;
       height: 100px;
+    }
+    #exprBtn {
+      margin-left: auto;
     }
     #grid {
       flex: 1 1 auto;

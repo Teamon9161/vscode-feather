@@ -94,12 +94,21 @@ function getWebviewContent(context, webview) {
   const agGridUri = webview.asWebviewUri(
     vscode.Uri.joinPath(context.extensionUri, 'media', 'ag-grid-community.min.js')
   );
+  const agGridCssUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, 'media', 'ag-grid.min.css')
+  );
+  const agThemeCssUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, 'media', 'ag-theme-alpine.min.css')
+  );
   const mainUri = webview.asWebviewUri(
     vscode.Uri.joinPath(context.extensionUri, 'media', 'main.js')
   );
   const csp = `default-src 'none'; img-src ${webview.cspSource} https:; script-src ${webview.cspSource} https: 'unsafe-inline'; style-src ${webview.cspSource} https: 'unsafe-inline'; font-src ${webview.cspSource} https:; worker-src blob:;`;
   html = html.replace('{{agGridUri}}', agGridUri.toString());
+  html = html.replace('{{agGridCssUri}}', agGridCssUri.toString());
+  html = html.replace('{{agThemeCssUri}}', agThemeCssUri.toString());
   html = html.replace('{{mainUri}}', mainUri.toString());
   html = html.replace('{{csp}}', csp);
   return html;
 }
+
