@@ -28,16 +28,105 @@ function getExpr() {
   return editor ? editor.getValue() : 'df';
 }
 
+const filterSvg =
+  '<svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>';
+
+class CustomHeader {
+  init(params) {
+    this.params = params;
+    this.eGui = document.createElement('div');
+    this.eGui.classList.add('custom-header');
+    this.eGui.innerHTML =
+      '<span class="custom-header-label">' +
+      params.displayName +
+      '</span><button class="custom-header-button" type="button">' +
+      filterSvg +
+      '</button>';
+    this.button = this.eGui.querySelector('button');
+    this.clickListener = e => {
+      e.stopPropagation();
+      openFilterMenu(params, this.button);
+    };
+    this.button.addEventListener('click', this.clickListener);
+  }
+  getGui() {
+    return this.eGui;
+  }
+  destroy() {
+    if (this.button) {
+      this.button.removeEventListener('click', this.clickListener);
+    }
+  }
+}
+
+let menuDiv;
+function openFilterMenu(params, button) {
+  closeMenu();
+  menuDiv = document.createElement('div');
+  menuDiv.className = 'filter-menu';
+  menuDiv.innerHTML =
+    '<button data-action="asc">Sort Asc</button>' +
+    '<button data-action="desc">Sort Desc</button>' +
+    '<input class="filter-input" placeholder="Filter..." />' +
+    '<button data-action="apply">Apply</button>';
+  document.body.appendChild(menuDiv);
+  const rect = button.getBoundingClientRect();
+  menuDiv.style.left = rect.left + 'px';
+  menuDiv.style.top = rect.bottom + 'px';
+
+  menuDiv
+    .querySelector('[data-action="asc"]')
+    .addEventListener('click', () => {
+      params.api.applyColumnState({
+        state: [{ colId: params.column.getId(), sort: 'asc' }]
+      });
+      closeMenu();
+    });
+  menuDiv
+    .querySelector('[data-action="desc"]')
+    .addEventListener('click', () => {
+      params.api.applyColumnState({
+        state: [{ colId: params.column.getId(), sort: 'desc' }]
+      });
+      closeMenu();
+    });
+  menuDiv
+    .querySelector('[data-action="apply"]')
+    .addEventListener('click', () => {
+      const val = menuDiv.querySelector('.filter-input').value;
+      const model = params.api.getFilterModel();
+      if (val) {
+        model[params.column.getId()] = { type: 'contains', filter: val };
+      } else {
+        delete model[params.column.getId()];
+      }
+      params.api.setFilterModel(model);
+      closeMenu();
+    });
+}
+
+function closeMenu() {
+  if (menuDiv) {
+    menuDiv.remove();
+    menuDiv = null;
+  }
+}
+
+document.addEventListener('click', e => {
+  if (menuDiv && !menuDiv.contains(e.target)) {
+    closeMenu();
+  }
+});
+
 const gridOptions = {
   columnDefs: [],
   rowData: [],
+  components: { customHeader: CustomHeader },
   defaultColDef: {
     sortable: true,
     filter: 'agTextColumnFilter',
     resizable: true,
-    suppressMenuHide: true,
-    menuTabs: ['filterMenuTab', 'generalMenuTab'],
-    headerComponentParams: { menuIcon: 'filter' }
+    headerComponent: 'customHeader'
   },
   onSortChanged: params => updateExprAndRequest(params.api),
   onFilterChanged: params => updateExprAndRequest(params.api)
