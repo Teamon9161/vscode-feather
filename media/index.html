@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="{{csp}}" />
+  <script src="{{agGridUri}}"></script>
+  <style>
+    body {
+      color: var(--vscode-editor-foreground);
+      background-color: var(--vscode-editor-background);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .top-controls, .bottom-controls {
+      margin-bottom: 8px;
+    }
+    button, input {
+      background-color: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+      border: 1px solid var(--vscode-button-border, transparent);
+      padding: 2px 6px;
+    }
+    button:hover {
+      background-color: var(--vscode-button-hoverBackground);
+    }
+    input {
+      background-color: var(--vscode-input-background);
+      color: var(--vscode-input-foreground);
+      border: 1px solid var(--vscode-input-border, transparent);
+    }
+    #grid {
+      flex: 1 1 auto;
+      width: 100%;
+    }
+    .bottom-controls {
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-controls">
+    <input id="exprInput" value="df" style="width:60%" />
+    <button id="exprBtn">Run</button>
+  </div>
+  <div id="status"></div>
+  <div id="grid"></div>
+  <div class="bottom-controls">
+    <label>Page Size: <input id="pageSize" value="100" /></label>
+    <label>Page: <input id="pageNumber" value="1" /></label>
+    <button id="gotoBtn">Go</button>
+    <button id="prevBtn">Prev</button>
+    <button id="nextBtn">Next</button>
+  </div>
+  <script src="{{mainUri}}"></script>
+</body>
+</html>
