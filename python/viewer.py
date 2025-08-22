@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import json
 
 try:
@@ -29,7 +30,17 @@ def main():
         return
 
     try:
-        df = eval(args.expr, {"pl": pl}, {"df": df})
+        df = eval(
+            args.expr,
+            {
+                "pl": pl,
+                "col": pl.col,
+                "lit": pl.lit,
+                "date": datetime.date,
+                "datetime": datetime.datetime,
+            },
+            {"df": df},
+        )
     except Exception as e:
         print(json.dumps({"error": f"Bad expression: {e}"}))
         return
