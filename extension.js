@@ -111,7 +111,6 @@ function getWebviewContent() {
   <script>
     const vscode = acquireVsCodeApi();
     let currentPage = 0;
-
     function request(page){
       const pageSize = parseInt(document.getElementById('pageSize').value) || 100;
       const filter = document.getElementById('filterInput').value;

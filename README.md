@@ -8,6 +8,7 @@ View and explore `.feather` files directly inside VS Code using Python's [polars
 - Configurable Python interpreter path (`feather.pythonPath`), defaults to `python`
 - Interactive table with resizable columns
 
+
 ## Requirements
 - Python with the `polars` package installed
 
