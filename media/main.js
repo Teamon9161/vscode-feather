@@ -129,7 +129,7 @@ function applySort(colId, descending) {
 
 function applyFilter(colId, value) {
   let expr = getExpr();
-  expr += `.filter(pl.col("${colId}").str.contains("${value}"))`;
+  expr += `.filter(col("${colId}").cast(str).str.contains("${value}"))`;
   editor.value = expr;
   request(0);
 }

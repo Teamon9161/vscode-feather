@@ -2,7 +2,7 @@
   "name": "vscode-feather-viewer",
   "displayName": "Feather Viewer",
   "description": "View Feather files using Python polars",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "Teamon",
   "engines": {
     "vscode": "^1.50.0"
