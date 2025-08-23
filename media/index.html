@@ -4,9 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="{{csp}}" />
-  <script src="{{agGridUri}}"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
-  <style>
+    <style>
     body {
       color: var(--vscode-editor-foreground);
       background-color: var(--vscode-editor-background);
@@ -39,19 +37,63 @@
       border: 1px solid var(--vscode-input-border, transparent);
     }
 
-    #editor {
-      width: 60%;
-      height: 100px;
-    }
+      #editor {
+        flex: 1;
+        height: 100px;
+        background: transparent;
+        color: var(--vscode-editor-foreground);
+        font-family: var(--vscode-editor-font-family);
+        border: 1px solid var(--vscode-input-border, transparent);
+      }
 
-    #exprBtn {
-      margin-left: auto;
-    }
+      #exprBtn {
+        margin-left: 8px;
+      }
 
-    #grid {
-      flex: 1 1 auto;
-      width: 100%;
-    }
+      #grid {
+        flex: 1 1 auto;
+        width: 100%;
+        overflow: auto;
+      }
+
+      #grid table {
+        border-collapse: collapse;
+        width: max-content;
+        table-layout: fixed;
+      }
+
+      #grid th,
+      #grid td {
+        border: 1px solid var(--vscode-panel-border, var(--vscode-editor-foreground));
+        padding: 2px 4px;
+        text-align: left;
+        font-family: var(--vscode-editor-font-family);
+        font-size: var(--vscode-editor-font-size);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      #grid th {
+        position: sticky;
+        top: 0;
+        background: var(--vscode-editor-background);
+        z-index: 1;
+      }
+
+      #grid th.selected {
+        background: var(--vscode-editor-selectionBackground, var(--vscode-editor-background));
+      }
+
+      #grid th .resizer {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 5px;
+        cursor: col-resize;
+        user-select: none;
+        height: 100%;
+      }
 
     .bottom-controls {
       margin-top: 8px;
@@ -107,7 +149,7 @@
 
 <body>
   <div class="top-controls">
-    <div id="editor"></div>
+    <textarea id="editor" lang="python"></textarea>
     <button id="exprBtn">Run</button>
   </div>
   <div id="status"></div>

@@ -1,66 +1,69 @@
 const vscode = acquireVsCodeApi();
 let currentPage = 0;
 const gridDiv = document.getElementById('grid');
+let currentColumns = [];
+let currentRows = [];
+const selectedCols = new Set();
 
-require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
-self.MonacoEnvironment = {
-  getWorkerUrl: function (moduleId, label) {
-    const proxy = `
-      self.MonacoEnvironment = { baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/' };
-      importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/base/worker/workerMain.js');
-    `;
-    return URL.createObjectURL(new Blob([proxy], { type: 'text/javascript' }));
+const editor = document.getElementById('editor');
+editor.value = 'df';
+editor.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    editor.setRangeText('    ', start, end, 'end');
+  } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    request(0);
+  } else if (e.key.toLowerCase() === 'e' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const selected = editor.value.slice(start, end);
+    request(0, selected.trim() ? selected : undefined);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const value = editor.value;
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+    const line = value.slice(lineStart, start);
+    const indentMatch = line.match(/^\s*/);
+    const indent = indentMatch ? indentMatch[0] : '';
+    editor.setRangeText('\n' + indent, start, end, 'end');
+  } else if (e.key === '/' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const value = editor.value;
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+    const lineEndIdx = value.indexOf('\n', end);
+    const lineEnd = lineEndIdx === -1 ? value.length : lineEndIdx;
+    const lines = value.slice(lineStart, lineEnd).split('\n');
+    const allCommented = lines.every(l => l.trim().startsWith('#'));
+    const newLines = lines.map(l =>
+      allCommented ? l.replace(/^(\s*)#\s?/, '$1') : l.replace(/^(\s*)/, '$1# ')
+    );
+    editor.value =
+      value.slice(0, lineStart) + newLines.join('\n') + value.slice(lineEnd);
+    editor.selectionStart = lineStart;
+    editor.selectionEnd = lineStart + newLines.join('\n').length;
   }
-};
-
-let editor;
-require(['vs/editor/editor.main'], function () {
-  editor = monaco.editor.create(document.getElementById('editor'), {
-    value: 'df',
-    language: 'python',
-    theme: document.body.classList.contains('vscode-dark') ? 'vs-dark' : 'vs',
-    automaticLayout: true
-  });
-  request(0);
 });
+request(0);
 
 function getExpr() {
-  return editor ? editor.getValue() : 'df';
+  return editor.value || 'df';
 }
 
 const filterSvg =
   '<svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>';
 
-class CustomHeader {
-  init(params) {
-    this.params = params;
-    this.eGui = document.createElement('div');
-    this.eGui.classList.add('custom-header');
-    this.eGui.innerHTML =
-      '<span class="custom-header-label">' +
-      params.displayName +
-      '</span><button class="custom-header-button" type="button">' +
-      filterSvg +
-      '</button>';
-    this.button = this.eGui.querySelector('button');
-    this.clickListener = e => {
-      e.stopPropagation();
-      openFilterMenu(params, this.button);
-    };
-    this.button.addEventListener('click', this.clickListener);
-  }
-  getGui() {
-    return this.eGui;
-  }
-  destroy() {
-    if (this.button) {
-      this.button.removeEventListener('click', this.clickListener);
-    }
-  }
-}
+const columnColor = i => `hsl(${(i * 45) % 360} 40% 55%)`;
 
 let menuDiv;
-function openFilterMenu(params, button) {
+function openFilterMenu(colId, button) {
   closeMenu();
   menuDiv = document.createElement('div');
   menuDiv.className = 'filter-menu';
@@ -77,13 +80,13 @@ function openFilterMenu(params, button) {
   menuDiv
     .querySelector('[data-action="asc"]')
     .addEventListener('click', () => {
-      applySort(params.column.getId(), false);
+      applySort(colId, false);
       closeMenu();
     });
   menuDiv
     .querySelector('[data-action="desc"]')
     .addEventListener('click', () => {
-      applySort(params.column.getId(), true);
+      applySort(colId, true);
       closeMenu();
     });
   menuDiv
@@ -91,7 +94,7 @@ function openFilterMenu(params, button) {
     .addEventListener('click', () => {
       const val = menuDiv.querySelector('.filter-input').value;
       if (val) {
-        applyFilter(params.column.getId(), val);
+        applyFilter(colId, val);
       }
       closeMenu();
     });
@@ -110,21 +113,9 @@ document.addEventListener('click', e => {
   }
 });
 
-const gridOptions = {
-  columnDefs: [],
-  rowData: [],
-  components: { customHeader: CustomHeader },
-  defaultColDef: {
-    resizable: true,
-    headerComponent: 'customHeader'
-  }
-};
-new agGrid.Grid(gridDiv, gridOptions);
-const gridApi = gridOptions.api;
-
-function request(page) {
+function request(page, exprOverride) {
   const pageSize = parseInt(document.getElementById('pageSize').value) || 100;
-  const expr = getExpr();
+  const expr = exprOverride ?? getExpr();
   vscode.postMessage({ type: 'load', page, pageSize, expr });
 }
 
@@ -132,18 +123,14 @@ function applySort(colId, descending) {
   let expr = getExpr();
   expr = expr.replace(/\.sort\([^)]*\)/g, '');
   expr += `.sort("${colId}"${descending ? ', descending=True' : ''})`;
-  if (editor) {
-    editor.setValue(expr);
-  }
+  editor.value = expr;
   request(0);
 }
 
 function applyFilter(colId, value) {
   let expr = getExpr();
   expr += `.filter(pl.col("${colId}").str.contains("${value}"))`;
-  if (editor) {
-    editor.setValue(expr);
-  }
+  editor.value = expr;
   request(0);
 }
 
@@ -160,11 +147,7 @@ window.addEventListener('message', event => {
   if (msg.type === 'data') {
     currentPage = msg.page;
     document.getElementById('pageNumber').value = msg.page + 1;
-    gridApi.setColumnDefs(msg.columns.map(c => ({
-      headerName: c,
-      field: c
-    })));
-    gridApi.setRowData(msg.rows);
+    renderTable(msg.columns, msg.rows);
     document.getElementById('status').textContent =
       'Showing ' + (msg.page * msg.pageSize + 1) + '-' +
       (msg.page * msg.pageSize + msg.rows.length) + ' of ' + msg.totalRows;
@@ -172,3 +155,129 @@ window.addEventListener('message', event => {
     document.getElementById('status').textContent = msg.error;
   }
 });
+
+function renderTable(columns, rows) {
+  currentColumns = columns;
+  currentRows = rows;
+  selectedCols.clear();
+  gridDiv.innerHTML = '';
+  const table = document.createElement('table');
+  const colgroup = document.createElement('colgroup');
+  columns.forEach(() => {
+    const col = document.createElement('col');
+    colgroup.appendChild(col);
+  });
+  table.appendChild(colgroup);
+
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  columns.forEach((c, i) => {
+    const th = document.createElement('th');
+    const content = document.createElement('div');
+    content.className = 'custom-header';
+    const label = document.createElement('span');
+    label.textContent = c;
+    label.style.color = columnColor(i);
+    content.appendChild(label);
+    const btn = document.createElement('button');
+    btn.className = 'custom-header-button';
+    btn.type = 'button';
+    btn.innerHTML = filterSvg;
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      openFilterMenu(c, btn);
+    });
+    content.appendChild(btn);
+    th.appendChild(content);
+    th.addEventListener('click', e => handleColumnClick(e, i, th, headerRow));
+    const resizer = document.createElement('div');
+    resizer.className = 'resizer';
+    resizer.addEventListener('mousedown', e => initResize(e, i, colgroup, th));
+    resizer.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      autoFitColumns(selectedCols.size ? Array.from(selectedCols) : [i], colgroup);
+    });
+    th.appendChild(resizer);
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    columns.forEach((c, i) => {
+      const td = document.createElement('td');
+      td.textContent = r[c];
+      td.style.color = columnColor(i);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  gridDiv.appendChild(table);
+
+  columns.forEach((_, i) => autoFitColumns([i], colgroup));
+}
+
+function initResize(e, index, colgroup, th) {
+  e.preventDefault();
+  const startX = e.clientX;
+  const startWidth = th.getBoundingClientRect().width;
+  colgroup.children[index].style.width = startWidth + 'px';
+
+  function onMouseMove(ev) {
+    const dx = ev.clientX - startX;
+    const newWidth = Math.max(40, startWidth + dx);
+    colgroup.children[index].style.width = newWidth + 'px';
+  }
+
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+}
+
+function calcAutoWidth(index) {
+  const measure = document.createElement('span');
+  measure.style.visibility = 'hidden';
+  measure.style.position = 'absolute';
+  measure.style.whiteSpace = 'pre';
+  const style = getComputedStyle(gridDiv);
+  measure.style.fontFamily = style.fontFamily;
+  measure.style.fontSize = style.fontSize;
+  document.body.appendChild(measure);
+  let max = 0;
+  measure.textContent = currentColumns[index];
+  max = Math.max(max, measure.offsetWidth);
+  currentRows.forEach(r => {
+    measure.textContent = r[currentColumns[index]] ?? '';
+    if (measure.offsetWidth > max) max = measure.offsetWidth;
+  });
+  measure.remove();
+  return max + 16;
+}
+
+function autoFitColumns(indices, colgroup) {
+  indices.forEach(i => {
+    const w = calcAutoWidth(i);
+    colgroup.children[i].style.width = w + 'px';
+  });
+}
+
+function handleColumnClick(e, index, th, headerRow) {
+  if (!(e.ctrlKey || e.metaKey)) {
+    selectedCols.forEach(i => headerRow.children[i].classList.remove('selected'));
+    selectedCols.clear();
+  }
+  if (selectedCols.has(index)) {
+    selectedCols.delete(index);
+    th.classList.remove('selected');
+  } else {
+    selectedCols.add(index);
+    th.classList.add('selected');
+  }
+}

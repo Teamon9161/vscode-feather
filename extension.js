@@ -91,14 +91,10 @@ function runPython(context, file, page, pageSize, expr) {
 function getWebviewContent(context, webview) {
   const htmlPath = path.join(context.extensionPath, 'media', 'index.html');
   let html = fs.readFileSync(htmlPath, 'utf8');
-  const agGridUri = webview.asWebviewUri(
-    vscode.Uri.joinPath(context.extensionUri, 'media', 'ag-grid-community.min.js')
-  );
   const mainUri = webview.asWebviewUri(
     vscode.Uri.joinPath(context.extensionUri, 'media', 'main.js')
   );
   const csp = `default-src 'none'; img-src ${webview.cspSource} https:; script-src ${webview.cspSource} https: 'unsafe-inline'; style-src ${webview.cspSource} https: 'unsafe-inline'; font-src ${webview.cspSource} https:; worker-src blob:;`;
-  html = html.replace('{{agGridUri}}', agGridUri.toString());
   html = html.replace('{{mainUri}}', mainUri.toString());
   html = html.replace('{{csp}}', csp);
   return html;
