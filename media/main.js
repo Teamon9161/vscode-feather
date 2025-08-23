@@ -57,7 +57,7 @@ function getExpr() {
 const filterSvg =
   '<svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>';
 
-const columnColor = i => `hsl(${(i * 45) % 360} 70% 60%)`;
+const columnColor = i => `hsl(${(i * 45) % 360} 40% 55%)`;
 
 let menuDiv;
 function openFilterMenu(colId, button) {
@@ -156,16 +156,23 @@ window.addEventListener('message', event => {
 function renderTable(columns, rows) {
   gridDiv.innerHTML = '';
   const table = document.createElement('table');
+  const colgroup = document.createElement('colgroup');
+  columns.forEach(() => {
+    const col = document.createElement('col');
+    colgroup.appendChild(col);
+  });
+  table.appendChild(colgroup);
+
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
   columns.forEach((c, i) => {
-      const th = document.createElement('th');
-      const content = document.createElement('div');
-      content.className = 'custom-header';
-      const label = document.createElement('span');
-      label.textContent = c;
-      label.style.color = columnColor(i);
-      content.appendChild(label);
+    const th = document.createElement('th');
+    const content = document.createElement('div');
+    content.className = 'custom-header';
+    const label = document.createElement('span');
+    label.textContent = c;
+    label.style.color = columnColor(i);
+    content.appendChild(label);
     const btn = document.createElement('button');
     btn.className = 'custom-header-button';
     btn.type = 'button';
@@ -176,21 +183,47 @@ function renderTable(columns, rows) {
     });
     content.appendChild(btn);
     th.appendChild(content);
+    const resizer = document.createElement('div');
+    resizer.className = 'resizer';
+    resizer.addEventListener('mousedown', e => initResize(e, i, colgroup, th));
+    th.appendChild(resizer);
     headerRow.appendChild(th);
   });
   thead.appendChild(headerRow);
   table.appendChild(thead);
+
   const tbody = document.createElement('tbody');
   rows.forEach(r => {
     const tr = document.createElement('tr');
     columns.forEach((c, i) => {
-        const td = document.createElement('td');
-        td.textContent = r[c];
-        td.style.color = columnColor(i);
-        tr.appendChild(td);
+      const td = document.createElement('td');
+      td.textContent = r[c];
+      td.style.color = columnColor(i);
+      tr.appendChild(td);
     });
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
   gridDiv.appendChild(table);
+}
+
+function initResize(e, index, colgroup, th) {
+  e.preventDefault();
+  const startX = e.clientX;
+  const startWidth = th.getBoundingClientRect().width;
+  colgroup.children[index].style.width = startWidth + 'px';
+
+  function onMouseMove(ev) {
+    const dx = ev.clientX - startX;
+    const newWidth = Math.max(40, startWidth + dx);
+    colgroup.children[index].style.width = newWidth + 'px';
+  }
+
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
 }

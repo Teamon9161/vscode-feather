@@ -58,8 +58,8 @@
 
       #grid table {
         border-collapse: collapse;
-        width: max-content;
-        min-width: 100%;
+        width: 100%;
+        table-layout: fixed;
       }
 
       #grid th,
@@ -69,6 +69,26 @@
         text-align: left;
         font-family: var(--vscode-editor-font-family);
         font-size: var(--vscode-editor-font-size);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      #grid th {
+        position: sticky;
+        top: 0;
+        background: var(--vscode-editor-background);
+        z-index: 1;
+      }
+
+      #grid th .resizer {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 5px;
+        cursor: col-resize;
+        user-select: none;
+        height: 100%;
       }
 
     .bottom-controls {
