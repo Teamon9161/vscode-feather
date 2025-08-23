@@ -57,15 +57,18 @@
       }
 
       #grid table {
-        width: 100%;
         border-collapse: collapse;
+        width: max-content;
+        min-width: 100%;
       }
 
       #grid th,
       #grid td {
-        border: 1px solid var(--vscode-editor-foreground);
+        border: 1px solid var(--vscode-panel-border, var(--vscode-editor-foreground));
         padding: 2px 4px;
         text-align: left;
+        font-family: var(--vscode-editor-font-family);
+        font-size: var(--vscode-editor-font-size);
       }
 
     .bottom-controls {

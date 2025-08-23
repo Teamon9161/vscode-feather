@@ -10,6 +10,15 @@ editor.addEventListener('keydown', e => {
     const start = editor.selectionStart;
     const end = editor.selectionEnd;
     editor.setRangeText('    ', start, end, 'end');
+  } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    request(0);
+  } else if (e.key.toLowerCase() === 'e' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const selected = editor.value.slice(start, end);
+    request(0, selected.trim() ? selected : undefined);
   } else if (e.key === 'Enter') {
     e.preventDefault();
     const start = editor.selectionStart;
@@ -48,7 +57,7 @@ function getExpr() {
 const filterSvg =
   '<svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>';
 
-const columnColor = i => `hsl(${(i * 45) % 360} 70% 40%)`;
+const columnColor = i => `hsl(${(i * 45) % 360} 70% 60%)`;
 
 let menuDiv;
 function openFilterMenu(colId, button) {
@@ -101,9 +110,9 @@ document.addEventListener('click', e => {
   }
 });
 
-function request(page) {
+function request(page, exprOverride) {
   const pageSize = parseInt(document.getElementById('pageSize').value) || 100;
-  const expr = getExpr();
+  const expr = exprOverride ?? getExpr();
   vscode.postMessage({ type: 'load', page, pageSize, expr });
 }
 
