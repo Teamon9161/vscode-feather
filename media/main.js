@@ -48,7 +48,7 @@ function getExpr() {
 const filterSvg =
   '<svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>';
 
-const columnColor = i => `hsl(${(i * 45) % 360} 100% 50% / 0.15)`;
+const columnColor = i => `hsl(${(i * 45) % 360} 70% 40%)`;
 
 let menuDiv;
 function openFilterMenu(colId, button) {
@@ -150,13 +150,13 @@ function renderTable(columns, rows) {
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
   columns.forEach((c, i) => {
-    const th = document.createElement('th');
-    th.style.backgroundColor = columnColor(i);
-    const content = document.createElement('div');
-    content.className = 'custom-header';
-    const label = document.createElement('span');
-    label.textContent = c;
-    content.appendChild(label);
+      const th = document.createElement('th');
+      const content = document.createElement('div');
+      content.className = 'custom-header';
+      const label = document.createElement('span');
+      label.textContent = c;
+      label.style.color = columnColor(i);
+      content.appendChild(label);
     const btn = document.createElement('button');
     btn.className = 'custom-header-button';
     btn.type = 'button';
@@ -175,10 +175,10 @@ function renderTable(columns, rows) {
   rows.forEach(r => {
     const tr = document.createElement('tr');
     columns.forEach((c, i) => {
-      const td = document.createElement('td');
-      td.textContent = r[c];
-      td.style.backgroundColor = columnColor(i);
-      tr.appendChild(td);
+        const td = document.createElement('td');
+        td.textContent = r[c];
+        td.style.color = columnColor(i);
+        tr.appendChild(td);
     });
     tbody.appendChild(tr);
   });
