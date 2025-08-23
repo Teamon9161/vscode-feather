@@ -1,15 +1,14 @@
 # Feather Viewer VS Code Extension
 
-View and explore `.feather` files directly inside VS Code using Python's [polars](https://www.pola.rs/) library and an interactive table powered by AG Grid.
+View and explore `.feather` files directly inside VS Code using Python's [polars](https://www.pola.rs/) library and a lightweight table.
 
 ## Features
 - Pagination with next/previous and jump to page
 - Apply arbitrary Polars code to transform the DataFrame before display (default `df`)
-- Apply arbitrary Polars code to transform the DataFrame before display (default `df`)
 - Configurable Python interpreter path (`feather.pythonPath`), defaults to `python`
-- Interactive grid with column resizing and double-click auto-sizing powered by [AG Grid](https://www.ag-grid.com/)
+- Lightweight table with column sorting and filtering (inspired by [jonaraphael/csv](https://github.com/jonaraphael/csv))
 - Each column header shows a filter icon with menu options for sorting or entering filter expressions that append to the code so operations apply to the entire table
-- Expression input uses a lightweight textarea with Python highlighting that follows VS Code theming and supports Tab indentation and Ctrl-/ commenting
+- Expression input uses a lightweight textarea with Python highlighting that follows VS Code theming and supports Tab indentation, Enter auto-indent, and Ctrl-/ commenting
 
 ## Requirements
 - Python with the `polars` package installed

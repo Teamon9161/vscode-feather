@@ -4,8 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="{{csp}}" />
-  <script src="{{agGridUri}}"></script>
-  <style>
+    <style>
     body {
       color: var(--vscode-editor-foreground);
       background-color: var(--vscode-editor-background);
@@ -51,10 +50,23 @@
       margin-left: auto;
     }
 
-    #grid {
-      flex: 1 1 auto;
-      width: 100%;
-    }
+      #grid {
+        flex: 1 1 auto;
+        width: 100%;
+        overflow: auto;
+      }
+
+      #grid table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      #grid th,
+      #grid td {
+        border: 1px solid var(--vscode-editor-foreground);
+        padding: 2px 4px;
+        text-align: left;
+      }
 
     .bottom-controls {
       margin-top: 8px;

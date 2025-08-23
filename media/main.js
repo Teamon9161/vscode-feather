@@ -9,7 +9,17 @@ editor.addEventListener('keydown', e => {
     e.preventDefault();
     const start = editor.selectionStart;
     const end = editor.selectionEnd;
-    editor.setRangeText('  ', start, end, 'end');
+    editor.setRangeText('    ', start, end, 'end');
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const value = editor.value;
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+    const line = value.slice(lineStart, start);
+    const indentMatch = line.match(/^\s*/);
+    const indent = indentMatch ? indentMatch[0] : '';
+    editor.setRangeText('\n' + indent, start, end, 'end');
   } else if (e.key === '/' && (e.ctrlKey || e.metaKey)) {
     e.preventDefault();
     const start = editor.selectionStart;
@@ -38,36 +48,8 @@ function getExpr() {
 const filterSvg =
   '<svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>';
 
-class CustomHeader {
-  init(params) {
-    this.params = params;
-    this.eGui = document.createElement('div');
-    this.eGui.classList.add('custom-header');
-    this.eGui.innerHTML =
-      '<span class="custom-header-label">' +
-      params.displayName +
-      '</span><button class="custom-header-button" type="button">' +
-      filterSvg +
-      '</button>';
-    this.button = this.eGui.querySelector('button');
-    this.clickListener = e => {
-      e.stopPropagation();
-      openFilterMenu(params, this.button);
-    };
-    this.button.addEventListener('click', this.clickListener);
-  }
-  getGui() {
-    return this.eGui;
-  }
-  destroy() {
-    if (this.button) {
-      this.button.removeEventListener('click', this.clickListener);
-    }
-  }
-}
-
 let menuDiv;
-function openFilterMenu(params, button) {
+function openFilterMenu(colId, button) {
   closeMenu();
   menuDiv = document.createElement('div');
   menuDiv.className = 'filter-menu';
@@ -84,13 +66,13 @@ function openFilterMenu(params, button) {
   menuDiv
     .querySelector('[data-action="asc"]')
     .addEventListener('click', () => {
-      applySort(params.column.getId(), false);
+      applySort(colId, false);
       closeMenu();
     });
   menuDiv
     .querySelector('[data-action="desc"]')
     .addEventListener('click', () => {
-      applySort(params.column.getId(), true);
+      applySort(colId, true);
       closeMenu();
     });
   menuDiv
@@ -98,7 +80,7 @@ function openFilterMenu(params, button) {
     .addEventListener('click', () => {
       const val = menuDiv.querySelector('.filter-input').value;
       if (val) {
-        applyFilter(params.column.getId(), val);
+        applyFilter(colId, val);
       }
       closeMenu();
     });
@@ -116,18 +98,6 @@ document.addEventListener('click', e => {
     closeMenu();
   }
 });
-
-const gridOptions = {
-  columnDefs: [],
-  rowData: [],
-  components: { customHeader: CustomHeader },
-  defaultColDef: {
-    resizable: true,
-    headerComponent: 'customHeader'
-  }
-};
-new agGrid.Grid(gridDiv, gridOptions);
-const gridApi = gridOptions.api;
 
 function request(page) {
   const pageSize = parseInt(document.getElementById('pageSize').value) || 100;
@@ -163,11 +133,7 @@ window.addEventListener('message', event => {
   if (msg.type === 'data') {
     currentPage = msg.page;
     document.getElementById('pageNumber').value = msg.page + 1;
-    gridApi.setColumnDefs(msg.columns.map(c => ({
-      headerName: c,
-      field: c
-    })));
-    gridApi.setRowData(msg.rows);
+    renderTable(msg.columns, msg.rows);
     document.getElementById('status').textContent =
       'Showing ' + (msg.page * msg.pageSize + 1) + '-' +
       (msg.page * msg.pageSize + msg.rows.length) + ' of ' + msg.totalRows;
@@ -175,3 +141,41 @@ window.addEventListener('message', event => {
     document.getElementById('status').textContent = msg.error;
   }
 });
+
+function renderTable(columns, rows) {
+  gridDiv.innerHTML = '';
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  columns.forEach(c => {
+    const th = document.createElement('th');
+    th.classList.add('custom-header');
+    const label = document.createElement('span');
+    label.textContent = c;
+    th.appendChild(label);
+    const btn = document.createElement('button');
+    btn.className = 'custom-header-button';
+    btn.type = 'button';
+    btn.innerHTML = filterSvg;
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      openFilterMenu(c, btn);
+    });
+    th.appendChild(btn);
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    columns.forEach(c => {
+      const td = document.createElement('td');
+      td.textContent = r[c];
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  gridDiv.appendChild(table);
+}
