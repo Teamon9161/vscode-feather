@@ -10,6 +10,8 @@ View and explore `.feather` files directly inside VS Code using Python's [polars
 - Each column header shows a filter icon with menu options for sorting or entering filter expressions that append to the code so operations apply to the entire table
 - Expression input uses a lightweight textarea with Python highlighting that follows VS Code theming and supports Tab indentation, Enter auto-indent, and Ctrl-/ commenting
 
+- Table columns are color-striped for better visual separation
+
 ## Requirements
 - Python with the `polars` package installed
 
