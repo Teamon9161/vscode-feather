@@ -4,6 +4,31 @@ const gridDiv = document.getElementById('grid');
 
 const editor = document.getElementById('editor');
 editor.value = 'df';
+editor.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    editor.setRangeText('  ', start, end, 'end');
+  } else if (e.key === '/' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const value = editor.value;
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+    const lineEndIdx = value.indexOf('\n', end);
+    const lineEnd = lineEndIdx === -1 ? value.length : lineEndIdx;
+    const lines = value.slice(lineStart, lineEnd).split('\n');
+    const allCommented = lines.every(l => l.trim().startsWith('#'));
+    const newLines = lines.map(l =>
+      allCommented ? l.replace(/^(\s*)#\s?/, '$1') : l.replace(/^(\s*)/, '$1# ')
+    );
+    editor.value =
+      value.slice(0, lineStart) + newLines.join('\n') + value.slice(lineEnd);
+    editor.selectionStart = lineStart;
+    editor.selectionEnd = lineStart + newLines.join('\n').length;
+  }
+});
 request(0);
 
 function getExpr() {

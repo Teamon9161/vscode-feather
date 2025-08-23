@@ -9,7 +9,7 @@ View and explore `.feather` files directly inside VS Code using Python's [polars
 - Configurable Python interpreter path (`feather.pythonPath`), defaults to `python`
 - Interactive grid with column resizing and double-click auto-sizing powered by [AG Grid](https://www.ag-grid.com/)
 - Each column header shows a filter icon with menu options for sorting or entering filter expressions that append to the code so operations apply to the entire table
-- Expression input uses a lightweight markdown-style textarea with the language set to Python
+- Expression input uses a lightweight textarea with Python highlighting that follows VS Code theming and supports Tab indentation and Ctrl-/ commenting
 
 ## Requirements
 - Python with the `polars` package installed
