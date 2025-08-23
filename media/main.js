@@ -1,6 +1,9 @@
 const vscode = acquireVsCodeApi();
 let currentPage = 0;
 const gridDiv = document.getElementById('grid');
+let currentColumns = [];
+let currentRows = [];
+const selectedCols = new Set();
 
 const editor = document.getElementById('editor');
 editor.value = 'df';
@@ -154,6 +157,9 @@ window.addEventListener('message', event => {
 });
 
 function renderTable(columns, rows) {
+  currentColumns = columns;
+  currentRows = rows;
+  selectedCols.clear();
   gridDiv.innerHTML = '';
   const table = document.createElement('table');
   const colgroup = document.createElement('colgroup');
@@ -183,9 +189,14 @@ function renderTable(columns, rows) {
     });
     content.appendChild(btn);
     th.appendChild(content);
+    th.addEventListener('click', e => handleColumnClick(e, i, th, headerRow));
     const resizer = document.createElement('div');
     resizer.className = 'resizer';
     resizer.addEventListener('mousedown', e => initResize(e, i, colgroup, th));
+    resizer.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      autoFitColumns(selectedCols.size ? Array.from(selectedCols) : [i], colgroup);
+    });
     th.appendChild(resizer);
     headerRow.appendChild(th);
   });
@@ -205,6 +216,8 @@ function renderTable(columns, rows) {
   });
   table.appendChild(tbody);
   gridDiv.appendChild(table);
+
+  columns.forEach((_, i) => autoFitColumns([i], colgroup));
 }
 
 function initResize(e, index, colgroup, th) {
@@ -226,4 +239,45 @@ function initResize(e, index, colgroup, th) {
 
   document.addEventListener('mousemove', onMouseMove);
   document.addEventListener('mouseup', onMouseUp);
+}
+
+function calcAutoWidth(index) {
+  const measure = document.createElement('span');
+  measure.style.visibility = 'hidden';
+  measure.style.position = 'absolute';
+  measure.style.whiteSpace = 'pre';
+  const style = getComputedStyle(gridDiv);
+  measure.style.fontFamily = style.fontFamily;
+  measure.style.fontSize = style.fontSize;
+  document.body.appendChild(measure);
+  let max = 0;
+  measure.textContent = currentColumns[index];
+  max = Math.max(max, measure.offsetWidth);
+  currentRows.forEach(r => {
+    measure.textContent = r[currentColumns[index]] ?? '';
+    if (measure.offsetWidth > max) max = measure.offsetWidth;
+  });
+  measure.remove();
+  return max + 16;
+}
+
+function autoFitColumns(indices, colgroup) {
+  indices.forEach(i => {
+    const w = calcAutoWidth(i);
+    colgroup.children[i].style.width = w + 'px';
+  });
+}
+
+function handleColumnClick(e, index, th, headerRow) {
+  if (!(e.ctrlKey || e.metaKey)) {
+    selectedCols.forEach(i => headerRow.children[i].classList.remove('selected'));
+    selectedCols.clear();
+  }
+  if (selectedCols.has(index)) {
+    selectedCols.delete(index);
+    th.classList.remove('selected');
+  } else {
+    selectedCols.add(index);
+    th.classList.add('selected');
+  }
 }

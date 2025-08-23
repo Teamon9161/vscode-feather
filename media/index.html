@@ -58,7 +58,7 @@
 
       #grid table {
         border-collapse: collapse;
-        width: 100%;
+        width: max-content;
         table-layout: fixed;
       }
 
@@ -79,6 +79,10 @@
         top: 0;
         background: var(--vscode-editor-background);
         z-index: 1;
+      }
+
+      #grid th.selected {
+        background: var(--vscode-editor-selectionBackground, var(--vscode-editor-background));
       }
 
       #grid th .resizer {

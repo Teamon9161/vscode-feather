@@ -11,6 +11,7 @@ View and explore `.feather` files directly inside VS Code using Python's [polars
 - Expression input uses a lightweight textarea with Python highlighting that follows VS Code theming and supports Tab indentation, Enter auto-indent, and Ctrl-/ commenting
 - Expression textarea supports Ctrl+Enter to run the current expression and Ctrl+E to run the selected code
 - Column headers stay fixed while scrolling and widths can be adjusted by dragging
+- Columns auto-fit to their content and can be double-clicked to resize; Ctrl-click multiple headers to auto-fit them together
 - Each column uses a distinct, softer font color for better visual separation
 
 ## Requirements
